@@ -4,7 +4,11 @@ import com.akash.implementation.xMeme.beans.XMeme;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-@Repository
-public interface XmemeRepos extends JpaRepository<XMeme, Long> {
+import java.sql.Timestamp;
+import java.util.List;
 
+@Repository
+public interface XmemeRepo extends JpaRepository<XMeme, Long> {
+
+    List<XMeme> findTop100ByOrderByTimestampDesc();
 }

@@ -1,6 +1,10 @@
 package com.akash.implementation.xMeme.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import javax.persistence.*;
+import java.sql.Timestamp;
 
 @Entity
 @Table(name = "xmeme")
@@ -16,8 +20,13 @@ public class XMeme {
     @Column(name = "caption")
     String caption;
 
-    @Column(name = "memeUrl")
-    String memeUrl;
+    @Column(name = "url")
+    String url;
+
+    @JsonIgnore
+    @Column(name = "timestamp")
+    @UpdateTimestamp
+    Timestamp timestamp;
 
     public Long getId() {
         return id;
@@ -43,11 +52,19 @@ public class XMeme {
         this.caption = caption;
     }
 
-    public String getMemeUrl() {
-        return memeUrl;
+    public String getUrl() {
+        return url;
     }
 
-    public void setMemeUrl(String memeUrl) {
-        this.memeUrl = memeUrl;
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public Timestamp getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Timestamp timestamp) {
+        this.timestamp = timestamp;
     }
 }
