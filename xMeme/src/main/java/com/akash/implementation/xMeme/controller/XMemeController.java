@@ -2,8 +2,9 @@ package com.akash.implementation.xMeme.controller;
 
 import com.akash.implementation.xMeme.beans.XMeme;
 import com.akash.implementation.xMeme.repository.XmemeRepo;
+import com.akash.implementation.xMeme.request.PatchMemeData;
 import com.akash.implementation.xMeme.request.XMemeData;
-import com.akash.implementation.xMeme.response.ErrorMessage;
+import com.akash.implementation.xMeme.response.Message;
 import com.akash.implementation.xMeme.response.Response;
 import com.akash.implementation.xMeme.services.XMemeService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -16,9 +17,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
+
 @CrossOrigin(maxAge = 3600)
 @RestController
 public class XMemeController {
@@ -30,23 +31,28 @@ public class XMemeController {
 
     Logger logger = LogManager.getLogger(this.getClass());
 
-//    @CrossOrigin
     @PostMapping("/memes")
     public ResponseEntity<Object> postMeme(@RequestBody XMemeData xMemeData, HttpServletRequest req, HttpServletResponse res) throws JsonProcessingException {
-        if(xMemeData.getName() == null || xMemeData.getName().isEmpty()){
-            ErrorMessage message = new ErrorMessage();
+        if (xMemeData.getName() == null || xMemeData.getName().isEmpty()) {
+            Message message = new Message();
             message.setMessage("Name of Meme Maker is Required");
             return new ResponseEntity<>(message, HttpStatus.NOT_FOUND);
         }
-        if(xMemeData.getCaption() == null || xMemeData.getCaption().isEmpty()){
-            ErrorMessage message = new ErrorMessage();
+        if (xMemeData.getCaption() == null || xMemeData.getCaption().isEmpty()) {
+            Message message = new Message();
             message.setMessage("Meme Caption is Required");
             return new ResponseEntity<>(message, HttpStatus.NOT_FOUND);
         }
-        if(xMemeData.getUrl() == null || xMemeData.getUrl().isEmpty()){
-            ErrorMessage message = new ErrorMessage();
+        if (xMemeData.getUrl() == null || xMemeData.getUrl().isEmpty()) {
+            Message message = new Message();
             message.setMessage("Meme URL is Required");
             return new ResponseEntity<>(message, HttpStatus.NOT_FOUND);
+        }
+        List<XMeme> xMemeDuplicate = xmemeRepo.findByNameAndCaptionAndUrl(xMemeData.getName(), xMemeData.getCaption(), xMemeData.getUrl());
+        if (!xMemeDuplicate.isEmpty()) {
+            Message message = new Message();
+            message.setMessage("Meme Data is Already posted");
+            return new ResponseEntity<>(message, HttpStatus.CONFLICT);
         }
         Response response = new Response();
         response.setId(xMemeService.postMeme(xMemeData));
@@ -56,19 +62,49 @@ public class XMemeController {
     @GetMapping("/memes")
     public ResponseEntity<Object> getMemeList() throws JsonProcessingException {
         List<XMeme> xMemeList = xmemeRepo.findTop100ByOrderByTimestampDesc();
-        return new ResponseEntity<>(xMemeList,HttpStatus.OK);
+        return new ResponseEntity<>(xMemeList, HttpStatus.OK);
     }
 
     @GetMapping("memes/{id}")
     public ResponseEntity<Object> getMemeById(@PathVariable(name = "id", required = false) Long memeId) {
         Optional<XMeme> xMeme = xmemeRepo.findById(memeId);
-        if(xMeme.isPresent()){
+        if (xMeme.isPresent()) {
             return new ResponseEntity<>(xMeme.get(), HttpStatus.OK);
-        }
-        else{
-            ErrorMessage message = new ErrorMessage();
+        } else {
+            Message message = new Message();
             message.setMessage("Meme Id is not valid");
-            return new ResponseEntity<>(message,HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(message, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PatchMapping("memes/{id}")
+    public ResponseEntity<Object> patchMemeById(@PathVariable(name = "id", required = false) Long memeId, @RequestBody PatchMemeData memeData) {
+        Optional<XMeme> xMeme = xmemeRepo.findById(memeId);
+        if (xMeme.isPresent()) {
+            if (memeData.getCaption() == null || memeData.getCaption().isEmpty()) {
+                Message message = new Message();
+                message.setMessage("Meme Caption is Required");
+                return new ResponseEntity<>(message, HttpStatus.NOT_FOUND);
+            }
+            if (memeData.getUrl() == null || memeData.getUrl().isEmpty()) {
+                Message message = new Message();
+                message.setMessage("Meme URL is Required");
+                return new ResponseEntity<>(message, HttpStatus.NOT_FOUND);
+            }
+            List<XMeme> xMemeDuplicate = xmemeRepo.findByNameAndCaptionAndUrl(xMeme.get().getName(), memeData.getCaption(), memeData.getUrl());
+            if (!xMemeDuplicate.isEmpty()) {
+                Message message = new Message();
+                message.setMessage("Meme Data is Already posted");
+                return new ResponseEntity<>(message, HttpStatus.CONFLICT);
+            }
+            xMemeService.updateMeme(memeData, memeId);
+            Message message = new Message();
+            message.setMessage("Meme data updated Successfully");
+            return new ResponseEntity<>(message, HttpStatus.OK);
+        } else {
+            Message message = new Message();
+            message.setMessage("Meme Id is not valid");
+            return new ResponseEntity<>(message, HttpStatus.NOT_FOUND);
         }
     }
 }

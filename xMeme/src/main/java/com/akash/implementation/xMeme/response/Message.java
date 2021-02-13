@@ -1,6 +1,6 @@
 package com.akash.implementation.xMeme.response;
 
-public class ErrorMessage {
+public class Message {
     String message;
 
     public String getMessage() {
