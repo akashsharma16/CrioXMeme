@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
-
+@CrossOrigin(maxAge = 3600)
 @RestController
 public class XMemeController {
 
@@ -30,6 +30,7 @@ public class XMemeController {
 
     Logger logger = LogManager.getLogger(this.getClass());
 
+//    @CrossOrigin
     @PostMapping("/memes")
     public ResponseEntity<Object> postMeme(@RequestBody XMemeData xMemeData, HttpServletRequest req, HttpServletResponse res) throws JsonProcessingException {
         if(xMemeData.getName() == null || xMemeData.getName().isEmpty()){
